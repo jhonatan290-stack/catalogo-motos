@@ -44,6 +44,64 @@ tipos.forEach(tipo => {
   selectTipo.appendChild(opcion);
 });
 
+// ========== CONVERTIDOR DE MONEDA ==========
+let TASAS = { COP: 1, USD: 0.00024, EUR: 0.00022, JPY: 0.036, ZAR: 0.0045, AUD: 0.00037 };
+
+fetch("https://open.er-api.com/v6/latest/COP")
+  .then(r => r.json())
+  .then(d => {
+    TASAS = d.rates || {};
+    TASAS.COP = 1;
+    poblarMonedas();
+  })
+  .catch(() => {
+    TASAS = { COP: 1, USD: 0.00024, EUR: 0.00022, JPY: 0.036, ZAR: 0.0045, AUD: 0.00037 };
+    poblarMonedas();
+  });
+
+function nombreMoneda(code) {
+  try {
+    return new Intl.DisplayNames(["es"], { type: "currency" }).of(code);
+  } catch (e) {
+    return code;
+  }
+}
+
+function poblarMonedas() {
+  const lista = document.getElementById("monedaLista");
+  if (!lista) return;
+  const codigos = Object.keys(TASAS).sort();
+  lista.innerHTML = "";
+  codigos.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = `${c} - ${nombreMoneda(c).charAt(0).toUpperCase() + nombreMoneda(c).slice(1)}`;
+    lista.appendChild(opt);
+  });
+}
+
+function formatearPrecio(valor, moneda) {
+  try {
+    return new Intl.NumberFormat("es-CO", {
+      style: "currency",
+      currency: moneda,
+      maximumFractionDigits: moneda === "JPY" ? 0 : 0
+    }).format(valor);
+  } catch (e) {
+    return valor.toFixed(0) + " " + moneda;
+  }
+}
+
+document.addEventListener("change", (e) => {
+  if (!e.target.classList.contains("moneda-input")) return;
+  const tarjeta = e.target.closest(".tarjeta");
+  const span = tarjeta.querySelector(".precio-valor");
+  const baseCop = parseFloat(span.dataset.cop) || 0;
+  let moneda = e.target.value.trim().split(/[ -]/)[0].toUpperCase();
+  if (!TASAS[moneda]) moneda = "COP";
+  e.target.value = `${moneda} - ${nombreMoneda(moneda).charAt(0).toUpperCase() + nombreMoneda(moneda).slice(1)}`;
+  span.textContent = formatearPrecio(baseCop * (TASAS[moneda] || 1), moneda);
+});
+
 function renderizar(motos) {
   catalogo.innerHTML = "";
   sinResultados.hidden = motos.length > 0;
@@ -66,12 +124,16 @@ function renderizar(motos) {
           <li><strong>Potencia:</strong> ${moto.potencia}</li>
           <li><strong>Torque:</strong> ${moto.torque}</li>
           <li><strong>Peso:</strong> ${moto.peso}</li>
-          <li><strong>Precio:</strong> ${moto.precio}</li>
+          <li><strong>Precio:</strong> <span class="precio-valor" data-cop="${moto.precio.replace(/[^\d]/g, "")}">${moto.precio}</span></li>
         </ul>
+        <div class="precio-conversion">
+          <input class="moneda-input" list="monedaLista" placeholder="Buscar moneda..." value="COP - Peso colombiano">
+        </div>
       </div>
     `;
     catalogo.appendChild(tarjeta);
   });
+  poblarMonedas();
 }
 
 function filtrar() {
@@ -158,12 +220,16 @@ function renderComparador() {
     return;
   }
 
+  const monedaSel = document.getElementById("monedaComp");
+  let moneda = monedaSel ? monedaSel.value.trim().split(/[ -]/)[0].toUpperCase() : "COP";
+  if (!TASAS[moneda]) moneda = "COP";
+
   const filas = [
     { nombre: "Cilindraje (cc)", va: cc(a), vb: cc(b), mejor: "igual" },
     { nombre: "Potencia (hp)", va: hp(a), vb: hp(b), mejor: "mayor" },
     { nombre: "Torque (Nm)", va: nm(a), vb: nm(b), mejor: "mayor" },
     { nombre: "Peso (kg)", va: kg(a), vb: kg(b), mejor: "menor" },
-    { nombre: "Precio (COP)", va: cop(a), vb: cop(b), mejor: "menor" }
+    { nombre: "Precio (" + moneda + ")", va: cop(a), vb: cop(b), mejor: "menor" }
   ];
 
   let html = `<table>
@@ -178,7 +244,7 @@ function renderComparador() {
       if (f.va < f.vb) claseA = "ganador";
       else if (f.vb < f.va) claseB = "ganador";
     }
-    const fmt = (v) => f.nombre.includes("Precio") ? v.toLocaleString("es-CO").replace(/,/g, ".") : v;
+    const fmt = (v) => f.nombre.startsWith("Precio") ? formatearPrecio(v * (TASAS[moneda] || 1), moneda) : v;
     html += `<tr><td>${f.nombre}</td><td class="${claseA}">${fmt(f.va)}</td><td class="${claseB}">${fmt(f.vb)}</td></tr>`;
   });
 
@@ -188,6 +254,6 @@ function renderComparador() {
 
 selectMotoA.addEventListener("change", renderComparador);
 selectMotoB.addEventListener("change", renderComparador);
+document.getElementById("monedaComp").addEventListener("change", renderComparador);
 renderComparador();
 
-// Duplicar selects de marca para B ya está; también permitir cambiar modelo actualiza
