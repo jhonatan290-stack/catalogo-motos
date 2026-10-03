@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Catálogo de Motos de Alto Cilindraje</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilos.css">
+</head>
+<body>
+  <header>
+    <p class="eyebrow">Ficha técnica · Mercado 2026</p>
+    <h1>Motos de alto<br>cilindraje</h1>
+    <p class="lede">Especificaciones de manual de las motos más potentes que se venden hoy. Filtra por marca, tipo o busca tu modelo.</p>
+  </header>
+
+  <section class="filtros">
+    <div class="filtro-grupo">
+      <label for="buscador">Buscar</label>
+      <input type="text" id="buscador" placeholder="Modelo o marca...">
+    </div>
+    <div class="filtro-grupo">
+      <label for="marca">Marca</label>
+      <select id="marca">
+        <option value="todas">Todas</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label for="tipo">Tipo</label>
+      <select id="tipo">
+        <option value="todos">Todos</option>
+      </select>
+    </div>
+  </section>
+
+  <main id="catalogo" class="catalogo"></main>
+
+  <p id="sin-resultados" class="sin-resultados" hidden>No se encontraron motos con esos filtros.</p>
+
+  <section id="comparador" class="comparador">
+    <h2>Comparador entre motos</h2>
+    <div class="comparador-selects">
+      <div class="filtro-grupo">
+        <label for="marcaA">Marca A</label>
+        <select id="marcaA"><option value="">Elige una marca</option></select>
+      </div>
+      <div class="filtro-grupo">
+        <label for="motoA">Modelo A</label>
+        <select id="motoA"><option value="">Primero elige marca</option></select>
+      </div>
+      <div class="filtro-grupo">
+        <label for="marcaB">Marca B</label>
+        <select id="marcaB"><option value="">Elige una marca</option></select>
+      </div>
+      <div class="filtro-grupo">
+        <label for="motoB">Modelo B</label>
+        <select id="motoB"><option value="">Primero elige marca</option></select>
+      </div>
+    </div>
+    <div id="resultadoComparacion"></div>
+  </section>
+
+  <footer>
+    <p>Datos aproximados según las especificaciones oficiales de cada marca. 2026</p>
+  </footer>
+
+  <script src="datos.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
